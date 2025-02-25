@@ -6,7 +6,7 @@ export PYTHONPATH=$(pwd):$PYTHONPATH
 
 accelerate launch LaMed/src/train/train.py \
     --version v0 \
-    --model_name_or_path microsoft/Phi-3-mini-4k-instruct \
+    --model_name_or_path LaMed/pretrained_model/Phi-3-mini-4k-instruct \
     --model_type lamed_phi3 \
     --vision_tower vit3d \
     --pretrain_vision_model ./LaMed/pretrained_model/M3D-CLIP/pretrained_ViT.bin \
