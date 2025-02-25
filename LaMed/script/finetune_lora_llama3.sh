@@ -2,6 +2,8 @@
 
 # run "accelerate config" first!
 
+export PYTHONPATH=$(pwd):$PYTHONPATH
+
 accelerate launch LaMed/src/train/train.py \
     --version v0 \
     --model_name_or_path ./LaMed/pretrained_model/Meta-Llama-3-8B-Instruct/ \

@@ -48,9 +48,6 @@ class TrainingArguments(transformers.TrainingArguments):
     optim: str = field(default="adamw_torch")
     remove_unused_columns: bool = field(default=False)
 
-    ddp_backend: str = "nccl"
-    ddp_find_unused_parameters: bool = False
-
     # config in bash file
     bf16: bool = True
     output_dir: str = "./LaMed/output/CLIP"
@@ -90,23 +87,27 @@ def preprocess_logits_for_metrics(logits, labels):
 @dataclass
 class DataCollator:
     def __init__(self, gather_all):
-        self.gather_all = gather_all
+        self.gather_all = gather_all  # 是一个布尔值，表示是否在分布式训练中收集所有 GPU 的数据。
 
     def __call__(self, batch: list) -> dict:
+        # 从批次中提取 image、text、input_id 和 attention_mask 字段，分别存储在 images、texts、input_ids 和 attention_mask 中。
         images, texts, input_ids, attention_mask = tuple(
             [b[key] for b in batch] for key in ('image', 'text', 'input_id', 'attention_mask'))
 
+        # 使用 unsqueeze(0) 将每个样本的张量扩展一个维度，然后使用 torch.cat 在第0维度上拼接成一个批次。
         images = torch.cat([_.unsqueeze(0) for _ in images], dim=0)
         input_ids = torch.cat([_.unsqueeze(0) for _ in input_ids], dim=0)
         attention_mask = torch.cat([_.unsqueeze(0) for _ in attention_mask], dim=0)
 
+        # 计算批次大小。如果 gather_all 为 True，则获取分布式训练的总进程数，并将批次大小乘以总进程数。
         batch_size = images.shape[0]
         if self.gather_all:
             world_size = torch.distributed.get_world_size()
             batch_size *= world_size
 
-        labels = torch.arange(batch_size, device=images.device, dtype=torch.long)
+        labels = torch.arange(batch_size, device=images.device, dtype=torch.long)  # 生成一个从0到 batch_size-1 的标签张量。
 
+        # 构建返回字典
         return_dict = dict(
             images=images,
             input_ids=input_ids,
@@ -119,48 +120,64 @@ class DataCollator:
 
 
 def main():
+    # 解析命令行参数，分为模型参数、数据参数和训练参数
     parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
+    # 从预训练模型路径加载 BertTokenizer 分词器
     tokenizer = BertTokenizer.from_pretrained(model_args.language_model_name_or_path)
 
+    # 根据模型参数创建 M3DCLIPConfig
     config = M3DCLIPConfig.from_dict(vars(model_args))
+    # 创建 M3DCLIP 模型
     model = M3DCLIP(config)
 
+    # 如果指定了预训练模型，则加载预训练模型
     if model_args.pretrained_model:
+        # 加载预训练模型权重
         # ckpt = torch.load(model_args.pretrained_model)
         ckpt = load_file(model_args.pretrained_model)
+        # 将加载的权重加载到模型中，并设置 strict=True 确保权重严格匹配
         model.load_state_dict(ckpt, strict=True)
+        # 打印加载预训练模型的信息
         print("load pretrained model.")
 
+    # 创建训练数据集对象，传入数据参数、分词器和模式（'train'）
     train_dataset = ITRDataset(data_args, tokenizer, mode='train')
+    # 创建验证数据集对象，传入数据参数、分词器和模式（'validation'）
     eval_dataset = ITRDataset(data_args, tokenizer, mode='validation')
 
-    if model_args.gather_loss and not model_args.local_loss:
-        gather_all = True
-    else:
-        gather_all = False
-    data_collator = DataCollator(gather_all)
+    # 在每个 GPU 上独立计算 contrastive loss，并且将样本数据整理成模型可以接受的输入格式。
+    # gather_all=False 表示不进行跨 GPU 的数据收集和损失计算。
+    # 这通常用于资源有限或希望加快训练速度的情况。
+    data_collator = DataCollator(False)
 
+    # 创建 Trainer 对象，用于管理训练过程
     trainer = Trainer(
-                        model=model,
-                        args=training_args,
-                        data_collator=data_collator,
-                        train_dataset=train_dataset,
-                        eval_dataset=eval_dataset,
-                        compute_metrics=compute_metrics,
-                        preprocess_logits_for_metrics=preprocess_logits_for_metrics,
+                        model=model,  # 指定要训练的模型
+                        args=training_args,  # 传入训练参数
+                        data_collator=data_collator,  # 传入数据整理器
+                        train_dataset=train_dataset,  # 传入训练数据集
+                        eval_dataset=eval_dataset,  # 传入验证数据集
+                        compute_metrics=compute_metrics,  # 传入评估指标计算函数
+                        preprocess_logits_for_metrics=preprocess_logits_for_metrics,  # 传入 logits 预处理函数，用于计算评估指标
                       )
 
     # if you want to resume your training, pls set the checkpoint in trainer.train(resume_from_checkpoint="")
     trainer.train()
 
+    # 保存训练状态
     trainer.save_state()
+    # 保存模型配置
     model.config.save_pretrained(training_args.output_dir)
+    # 保存模型
     model.save_pretrained(training_args.output_dir)
+    # 保存分词器
     tokenizer.save_pretrained(training_args.output_dir)
 
+    # 获取模型的状态字典
     state_dict = model.state_dict()
+    # 将模型状态字典保存到文件
     torch.save(state_dict, os.path.join(training_args.output_dir, 'model_params.bin'))
 
 

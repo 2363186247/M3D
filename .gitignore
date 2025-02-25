@@ -1,0 +1,8 @@
+/Data/data/M3D_Cap/
+/Data/data/M3D_Cap_npy/
+/Data/data/test_data/
+/LaMed/pretrained_model/
+/LaMed/output/
+
+# 忽略编译文件
+__pycache__/
