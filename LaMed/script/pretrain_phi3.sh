@@ -14,7 +14,7 @@ accelerate launch LaMed/src/train/train.py \
     --bf16 True \
     --output_dir ./LaMed/output/LaMed-Phi3-4B-pretrain-0000 \
     --num_train_epochs 3 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
     --evaluation_strategy "steps" \
