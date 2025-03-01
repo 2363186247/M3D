@@ -49,12 +49,16 @@ class Vanilla(nn.Module):
             raise ValueError("num_tokens must be divisible by 4")
 
         # First, reshape to [b, num_tokens//4, 4, c]
+        # 将每 4 个 tokens 的特征分组
         x = x.view(b, num_tokens // 4, 4, c)
 
         # Then, permute to interleave the tokens
+        # permute(0, 1, 3, 2)： 将张量的第三和第四个维度互换
+        # contiguous：确保内存连续性。
         x = x.permute(0, 1, 3, 2).contiguous()
 
         # Finally, reshape to [b, num_tokens//4, c*4] to interleave features of 4 tokens
+        # 将每 4 个 tokens 的特征合并为一个新的特征向量
         x = x.view(b, num_tokens // 4, c * 4)
 
         # Apply the linear transformation
@@ -71,7 +75,7 @@ class FullLinear(nn.Module):
     def forward(self, x):
         x = self.linear(x)
         return x
-    @property
+    @property   # 将方法定义为属性
     def proj_out_num(self):
         num = 2048
         return num

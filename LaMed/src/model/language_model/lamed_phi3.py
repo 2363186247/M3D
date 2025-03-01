@@ -18,6 +18,7 @@ class LamedPhi3Config(Phi3Config):
     model_type = "lamed_phi3"
 
 
+# 
 class LamedPhi3Model(LamedMetaModel, Phi3Model):
     config_class = LamedPhi3Config  
     def __init__(self, config: Phi3Config):
@@ -29,7 +30,7 @@ class LamedPhi3ForCausalLM(LamedMetaForCausalLM, Phi3ForCausalLM):
 
     def __init__(self, config):
         super(LamedPhi3ForCausalLM, self).__init__(config)
-        self.model = LamedPhi3Model(config)     # 使用 LamedPhi3Model 替换 Phi3Model
+        self.model = LamedPhi3Model(config)     # 创建 LamedPhi3Model 模型
         self.vocab_size = config.vocab_size     # 词表大小
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False) # 线性层
 
