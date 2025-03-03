@@ -2,10 +2,11 @@
 
 # run "accelerate config" first!
 
+export PYTHONPATH=$(pwd):$PYTHONPATH
 
 accelerate launch LaMed/src/train/train.py \
     --version v0 \
-    --model_name_or_path microsoft/Phi-3-mini-4k-instruct \
+    --model_name_or_path LaMed/pretrained_model/Phi-3-mini-4k-instruct \
     --model_type phi3 \
     --lora_enable True \
     --vision_tower vit3d \

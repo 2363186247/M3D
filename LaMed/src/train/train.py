@@ -247,7 +247,7 @@ class DataCollator:
             )
         else:
             images, input_ids, labels, attention_mask = tuple(
-                [b[key] for b in batch] for key in ('image', 'input_id', 'label', 'attention_mask'))
+                [b[key] for b in batch if b is not None] for key in ('image', 'input_id', 'label', 'attention_mask'))
 
             images = torch.cat([_.unsqueeze(0) for _ in images], dim=0)
             input_ids = torch.cat([_.unsqueeze(0) for _ in input_ids], dim=0)
