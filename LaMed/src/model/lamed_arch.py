@@ -50,31 +50,38 @@ class LamedMetaModel:
             # 指定在 vision tower 中使用哪一层的输出特征。
             # vision tower 通常由多个层组成，每一层提取不同层次的特征。
             # 通过指定 vision_select_layer，可以选择最适合当前任务的特征层。
+            # finetune_lora_phi3 任务中，值为 -1 。
 
         self.config.vision_select_feature = model_args.vision_select_feature
             # 指定在 vision tower 中选择的特征类型。
             # 不同的层可能会输出不同类型的特征，例如卷积特征、池化特征等。
             # 通过指定 vision_select_feature，可以选择最适合当前任务的特征类型。
+            # finetune_lora_phi3 任务中，值为 'patch' 。
 
         self.config.mm_projector_type = model_args.mm_projector_type
             # 指定多模态投影器的类型，用于将视觉特征投影到多模态特征空间中。
             # 不同的投影器类型可能使用不同的架构或方法来实现特征投影。
+            # finetune_lora_phi3 任务中，值为 'spp' 。 
 
         self.config.proj_layer_type = model_args.proj_layer_type
             # 指定投影层的类型，用于定义多模态投影器中的层类型。
-            # 例如，可以是线性层、卷积层等。
+            # 例如，可以是线性层、卷积层、MLP 等。
+            # finetune_lora_phi3 任务中，值为 'mlp' 。
 
         self.config.proj_layer_num = model_args.proj_layer_num
             # 指定多模态投影器中的层数量。
             # 通过设置层的数量，可以控制投影器的深度和复杂度。
+            # finetune_lora_phi3 任务中，值为 2 。
 
         self.config.proj_pooling_type = model_args.proj_pooling_type
             # 指定多模态投影器中的池化类型。
             # 池化操作用于减少特征图的尺寸，同时保留重要的特征信息。
+            # finetune_lora_phi3 任务中，值为 'spatial' 。
 
         self.config.proj_pooling_size = model_args.proj_pooling_size
             # 指定多模态投影器中的池化大小。
             # 池化大小决定了池化操作的窗口大小，从而影响池化后的特征图尺寸。
+            # finetune_lora_phi3 任务中，值为 2 。
 
         # vision tower
         if self.get_vision_tower() is None: # 如果实例中不存在 vision_tower，则构建 vision_tower。
