@@ -4,6 +4,9 @@
 /Data/data/test_data/
 /LaMed/pretrained_model/
 /LaMed/output/
+/Data/data/M3D_Seg
+/Data/data/M3D-Seg
+/Data/data/M3D_Seg_npy
 
 # 忽略编译文件
 __pycache__/

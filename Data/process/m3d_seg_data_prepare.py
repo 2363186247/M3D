@@ -8,8 +8,8 @@ import numpy as np
 import json
 from multiprocessing import Pool
 
-source_path = "PATH/data/M3D_Seg/"
-target_path = "PATH/data/M3D_Seg_npy/"
+source_path = "/ai/xxr/LLM/M3D/Data/data/M3D_Seg/"
+target_path = "/ai/xxr/LLM/M3D/Data/data/M3D_Seg_npy/"
 
 transform = mtf.Compose(
     [
