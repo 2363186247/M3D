@@ -1259,7 +1259,7 @@ class UniDatasets(Dataset):
             VQADataset(args, tokenizer, close_ended=True, mode=mode),
             VQADataset(args, tokenizer, close_ended=False, mode=mode),
             VQAYNDataset(args, tokenizer, mode=mode),
-            MultiPosDataset(args, tokenizer, mode),
+            # MultiPosDataset(args, tokenizer, mode),
             # MultiSegDataset(args, tokenizer, mode),
             # MultiSegDataset(args, tokenizer, mode),
         ]

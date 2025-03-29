@@ -4,6 +4,8 @@
 
 export PYTHONPATH=$(pwd):$PYTHONPATH
 
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 accelerate launch LaMed/src/train/train.py \
     --version v0 \
     --model_name_or_path LaMed/pretrained_model/Phi-3-mini-4k-instruct \
@@ -17,7 +19,7 @@ accelerate launch LaMed/src/train/train.py \
     --bf16 True \
     --output_dir ./LaMed/output/LaMed-Phi3-4B-finetune-0000 \
     --num_train_epochs 5 \
-    --per_device_train_batch_size 8 \
+    --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
     --evaluation_strategy "steps" \

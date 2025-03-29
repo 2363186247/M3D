@@ -97,8 +97,8 @@ class TrainingArguments(transformers.TrainingArguments):
         },
     )
     seed: int = 42  # 随机种子
-    ddp_backend: Optional[str] = None   # 禁用分布式数据并行（DDP）
-    # ddp_backend: str = "nccl"   # 分布式数据并行（DDP）的后端（NVIDIA Collective Communications Library）
+    # ddp_backend: Optional[str] = None   # 禁用分布式数据并行（DDP）
+    ddp_backend: str = "nccl"   # 分布式数据并行（DDP）的后端（NVIDIA Collective Communications Library）
     ddp_timeout: int = 128000   # DDP 的超时时间
     ddp_find_unused_parameters: bool = False    # 是否查找未使用的参数
     optim: str = field(default="adamw_torch")   # 优化器类型
@@ -121,7 +121,7 @@ class TrainingArguments(transformers.TrainingArguments):
     warmup_ratio: float = 0.03
     lr_scheduler_type: str = "cosine"
     logging_steps: float = 10 # 0.001
-    gradient_checkpointing: bool = False # train fast
+    gradient_checkpointing: bool = True # train fast
     dataloader_pin_memory: bool = True # fast
     dataloader_num_workers: int = 0
     report_to: str = "tensorboard"
@@ -222,6 +222,23 @@ class DataCollator:
     def __init__(self, seg_enable):
         self.seg_enable = seg_enable
     def __call__(self, batch: list) -> dict:
+         # 先过滤掉None值
+        batch = [b for b in batch if b is not None]
+        
+        # 如果过滤后批次为空，返回一个空批次或跳过
+        if len(batch) == 0:
+            print("警告: 批次中所有样本均为None，跳过该批次")
+            # 返回一个空的批次结构
+            empty_batch = {
+                'images': torch.zeros(0, 1, 32, 256, 256),
+                'input_ids': torch.zeros(0, 512, dtype=torch.long),
+                'labels': torch.zeros(0, 512, dtype=torch.long),
+                'attention_mask': torch.zeros(0, 512, dtype=torch.long)
+            }
+            if self.seg_enable:
+                empty_batch['segs'] = torch.zeros(0, 1, 32, 256, 256)
+            return empty_batch
+        
         if self.seg_enable:
             images, input_ids, labels, attention_mask, segs = tuple(
                 [b[key] for b in batch] for key in ('image', 'input_id', 'label', 'attention_mask', 'seg'))
